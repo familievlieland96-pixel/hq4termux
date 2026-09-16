@@ -1,0 +1,28 @@
+# Secrets & local env
+.env
+*.env
+!.env.example
+cookies.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Generated index & pipeline output (regenerated, never shipped)
+corpus/hq4.db
+*.db
+output/
+frames/
+video_download.*
+hq4_video.*
+
+# Downloaded media & real third-party corpora stay on-device (IP boundary)
+corpus/segments/real-*/
+*.mp4
+*.webm
+*.mkv
+
+# OS
+.DS_Store
