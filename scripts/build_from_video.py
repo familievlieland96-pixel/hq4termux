@@ -8,6 +8,9 @@ Termux-native write path (the video-to-skill side of the fused skill):
   4. rebuild the FTS5 index over the whole corpus
 
 No qmd / ONNX / embeddings. Stdlib + yt-dlp + ffmpeg + whisper.cpp only.
+Scratch (downloads, transcripts) auto-routes to ~/scratch-hq4 (override
+H4_SCRATCH) and is removed after a successful downloaded-video run
+(H4_KEEP_SCRATCH=1 keeps it). A corpus dir is never polluted by scratch.
 
 Usage:
   python3 build_from_video.py <url-or-path> [corpus-dir]
@@ -52,10 +55,17 @@ def resolve_url(url: str) -> tuple[str, str]:
     return url, re.sub(r"[^A-Za-z0-9_-]", "-", p.stem)[:40] or "local"
 
 
+def scratch_dir() -> Path:
+    """Corpus-safe scratch for downloads + transcripts. Override: H4_SCRATCH."""
+    d = Path(os.environ.get("H4_SCRATCH", Path.home() / "scratch-hq4"))
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
 def download_video(url: str) -> str:
     """Download with the YouTube bot-check ladder. Returns the real file path."""
     out_base = os.environ.get("YT_OUT", "hq4_video")
-    out_dir = Path.cwd()
+    out_dir = scratch_dir()
     cmd = [
         "yt-dlp",
         "-f", "b[height<=480]/bv*[height<=480]+ba/b",
@@ -98,8 +108,7 @@ def download_video(url: str) -> str:
 
 def transcribe(video_file: str) -> tuple[str, int]:
     """whisper-cli -> (transcript text, duration seconds via ffprobe)."""
-    out = Path("output")
-    out.mkdir(exist_ok=True)
+    out = scratch_dir()
     stem = out / "hq4_transcript"
     subprocess.run(
         [str(WHISPER_CLI), "-m", str(WHISPER_MODEL), "-t", "4",
@@ -202,6 +211,16 @@ def main() -> None:
     # Rebuild the index over the whole corpus.
     subprocess.run([sys.executable, str(SCRIPTS / "build_index.py"),
                     str(corpus_dir)], check=True)
+    # Auto-clean scratch for downloaded videos (local inputs are never touched;
+    # H4_KEEP_SCRATCH=1 disables).
+    if not os.environ.get("H4_KEEP_SCRATCH") and url.startswith(("http", "https")):
+        for f in (video_file, str(scratch_dir() / "hq4_transcript.txt")):
+            p = Path(f)
+            if p.exists():
+                p.unlink()
+        sd = scratch_dir()
+        if not any(sd.iterdir()):
+            sd.rmdir()
 
 
 if __name__ == "__main__":

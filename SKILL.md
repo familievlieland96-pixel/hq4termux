@@ -54,7 +54,10 @@ python3 scripts/build_from_video.py <url-or-path> <corpus-dir>
 - `scripts/build_index.py <corpus> [db]` — rebuild the FTS5 index (stdlib).
 - `scripts/query.py <corpus-or-db> "<q>" [limit] [--json]` — cited search.
 - `scripts/build_from_video.py <url-or-path> <corpus>` — download, transcribe,
-  90s-segment, reindex.
+  90s-segment, reindex. Scratch (mp4 + transcript) auto-routes to
+  `~/scratch-hq4` and self-cleans after a successful downloaded-video run;
+  local-file inputs are never touched. Knobs: `H4_SCRATCH` (scratch dir),
+  `H4_KEEP_SCRATCH=1` (keep it), `HSEG_SECONDS` (segment length, default 90).
 - `scripts/validate_skill.py <skill.md>` — hollow-output gate (exit 1 = hollow).
 - `scripts/scan-malware.py <dir>` — static Python exfil/obfuscation scanner.
 
@@ -101,6 +104,9 @@ python3 scripts/build_from_video.py <url-or-path> <corpus-dir>
 - **Local-file citations are honest.** A corpus built from local video cites
   the real file path, never a fabricated `youtube.com/watch` link.
 - **`/tmp` is unwritable on Termux** — write scratch under `$HOME`, not `/tmp`.
+  `build_from_video.py` does this itself: downloads and whisper transcripts
+  go to `~/scratch-hq4` (never into the corpus dir) and are auto-removed
+  after a successful downloaded-video run.
 - **No `YT_COOKIES` on the phone.** Termux has no local browser, so
   `--cookies-from-browser` is unusable; export a Netscape `.txt` on another
   device and point `YT_COOKIES` at it.
