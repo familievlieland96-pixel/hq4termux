@@ -85,6 +85,10 @@ python3 scripts/build_from_video.py <url-or-path> <corpus-dir>
   the source words can miss. The built-in OR-fallback + 3-term retry is the
   mitigation; TF-IDF rerank over the same DB (stdlib) is the upgrade path if
   recall feels weak.
+- **FTS5 has no stemmer/plural handling.** Live test: querying "elephant"
+  missed a segment that only contained "elephants". Query with the word as it
+  likely appears in the source (or both forms), or add an FTS5 trigram /
+  porter stemmer tokenizer at index build time if recall suffers.
 - **qmd / ONNX deliberately absent.** The reference `ask-hormozi` pack used a
   Rust `qmd` binary (glibc-only) — it does not run on Termux bionic. This
   skill replaces its retrieval job with stdlib FTS5, so there is no binary to
