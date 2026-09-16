@@ -147,7 +147,9 @@ def write_segments(corpus_dir: Path, video_id: str, url: str,
     if not lines:
         return 0
     # Proportional segmentation: each chunk gets an estimated start second.
-    per_seg = max(1, round(len(text) / max(1, dur / SEG_SECONDS))) if dur else 400
+    target_chunks = max(1, round(dur / SEG_SECONDS)) if dur else 1
+    word_count = len(" ".join(lines).split())
+    per_seg = max(1, round(word_count / target_chunks))  # words per chunk
     chunks = []
     cur: list[str] = []
     for l in lines:
